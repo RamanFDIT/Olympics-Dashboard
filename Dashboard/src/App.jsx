@@ -18,7 +18,7 @@ function App() {
       />
       
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${isCompact ? 'ml-20' : 'ml-64'} overflow-auto`}>
+      <div className={`flex-1 transition-all duration-300 ${isCompact ? 'ml-20' : 'ml-50'} overflow-auto`}>
         {currentPage === 'home' && <Home onNavigate={setCurrentPage} />}
         {currentPage === 'story1' && <Story1 />}
         {currentPage === 'story2' && <Story2 />}

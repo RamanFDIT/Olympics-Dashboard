@@ -62,7 +62,7 @@ const DashboardMainGraph = ({ chartData, onNavigate }) => {
   };
 
   return (
-    <div className="w-full bg-white p-8 rounded-3xl shadow-xl">
+    <div className="w-full h-full bg-white p-8 rounded-3xl shadow-xl">
       {/* Custom Header Section */}
       <div 
         className="flex items-center justify-between mb-8 cursor-pointer group"

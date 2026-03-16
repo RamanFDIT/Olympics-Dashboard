@@ -21,7 +21,7 @@ const NavBar = ({ isCompact, setIsCompact, onNavigate }) => {
     const navItemClasses = `flex items-center gap-4 px-4 py-3 text-gray-700 hover:bg-slate-200 rounded-xl transition-all cursor-pointer font-medium ${isCompact ? 'justify-center px-0 mx-2' : ''}`;
 
     return (
-        <nav className={`${isCompact ? 'w-20' : 'w-64'} h-screen bg-slate-100 flex flex-col fixed left-0 top-0 z-50 border-r border-slate-200 transition-all duration-300`}>
+        <nav className={`${isCompact ? 'w-20' : 'w-50'} h-screen bg-slate-100 flex flex-col fixed left-0 top-0 z-50 border-r border-slate-200 transition-all duration-300`}>
             {/* Header / Hamburger Section */}
             <div className={`p-4 flex items-center ${isCompact ? 'justify-center' : 'justify-between'} border-b border-slate-200 h-20`}>
                 {!isCompact && (

@@ -3,6 +3,8 @@ import DashboardMainGraph from "../Components/DashboardMainGraph";
 import Indicator from "../Components/Indicator";
 import HeightComparisonChart from "../Components/HeightComparisonChart";
 import WinRateRadarChart from "../Components/WinRateRadarChart";
+import WinRateLollipopChart from "../Components/WinRateLollipopChart";
+import FunFactsSection from "../Components/FunFactsSection";
 
 const Home = ({ onNavigate }) => {
     const { chartData, loading } = useOlympicsData();
@@ -18,44 +20,49 @@ const Home = ({ onNavigate }) => {
     }
 
     return(
-        <main className="min-h-screen bg-gray-50 p-2 md:p-5">
-            <div className="w-full max-w-400 mx-auto space-y-8">
-                {/* Bottom Row: Indicators + Radar Overview */}
-                <div className="flex justify-between w-full mb-5">
-                    <div>
-                        <h1>Olympics</h1>
+        <main className="flex items-center gap-5 min-h-screen bg-gray-50 p-2 md:p-2">
+            <div className="w-2/3 flex flex-col justify-start gap-15">
+                {/* Header and Indicators */}
+                <div className="flex justify-between w-full h-auto">
+                    <div className = "w-90 p-3">
+                        <h1 className="text-2xl font-semibold text-gray-900 border-l-4 border-blue-600 pl-4 tracking-tight text-wrap">
+                            Olympic Excellence: Brazil, Japan, Italy, and France Trends from 1924 to 2020
+                        </h1>
                     </div>
-                    {/* Radar Chart as a Special Indicator */}
-                    {/* Standard Indicators */}
-                        <Indicator cardHead="Total Athletes" cardValue="14,000+" />
-                        <Indicator cardHead="Total Medals" cardValue="2,840" />
-                        <WinRateRadarChart 
-                        data={chartData?.winRateStats} 
-                        onNavigate={() => onNavigate('story3')} 
+                    <Indicator cardHead="Total Athletes" cardValue="2,840" />
+                    <Indicator cardHead="Total Gold Medals" cardValue="538" />
+                </div>
+                
+                {/* Main Graph */}
+                <div>
+                    {chartData ? (
+                        <DashboardMainGraph chartData={chartData} onNavigate={() => onNavigate('story2')} />
+                    ) : (
+                        <div className="bg-white p-10 rounded-3xl text-center shadow-lg">
+                            No data available for the main graph.
+                        </div>
+                    )}
+                </div>
+
+                {/* Fun Facts Section (Under Main Graph) */}
+                {/* <FunFactsSection /> */}
+            </div>
+
+            {/* Side Widgets */}
+            <div className="flex flex-col gap-5 w-1/3">
+                <div className="h-100">
+                    <HeightComparisonChart 
+                        data={chartData?.heightStats} 
+                        onNavigate={() => onNavigate('story1')} 
+                    />
+                </div>
+                <div className="h-75">
+                    <WinRateLollipopChart                                                                          
+                        data={chartData?.winRateStats}                                                             
+                        onNavigate={() => onNavigate('story3')}                                                    
                     />
                 </div>
             </div>
-            {/* Top Row: Main Graph + Height Widget */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Graph (2/3 width) */}
-                    <div className="lg:col-span-2">
-                        {chartData ? (
-                            <DashboardMainGraph chartData={chartData} onNavigate={() => onNavigate('story2')} />
-                        ) : (
-                            <div className="bg-white p-10 rounded-3xl text-center shadow-lg">
-                                No data available for the main graph.
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Height Comparison (1/3 width) */}
-                    <div className="h-full">
-                        <HeightComparisonChart 
-                            data={chartData?.heightStats} 
-                            onNavigate={() => onNavigate('story1')} 
-                        />
-                    </div>
-                </div>
         </main>
     );
 };

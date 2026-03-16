@@ -60,7 +60,7 @@ const WinRateRadarChart = ({ data, onNavigate }) => {
   };
 
   return (
-    <div className="w-110 h-62 bg-white p-4 rounded-3xl shadow-xl border border-gray-100 flex flex-col">
+    <div className="w-full h-full bg-white p-4 rounded-3xl shadow-xl border border-gray-100 flex flex-col">
       {/* Header with Navigation */}
       <div 
         className="w-full flex items-center justify-between mb-1 cursor-pointer group"
