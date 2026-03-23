@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import Papa from 'papaparse';
 import datasetURL from '../assets/CleanedDataset.csv';
 
-const useOlympicsData = () => {
+const useOlympicsData = (sportFilter = null, yearRange = null) => {
     const [rawData, setRawData] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -91,6 +91,97 @@ const useOlympicsData = () => {
         );
         const globalAvg = totalHeightCount > 0 ? (totalHeightSum / totalHeightCount) : 0;
 
+        // --- STORY 1 DETAIL: Physical Stats (Bubble + Histogram) ---
+        const physCountries = ['Brazil', 'Japan', 'Italy', 'France'];
+        const binSize = 2;
+        const binMin = 135;
+        const binMax = 220;
+        const bins = [];
+        for (let b = binMin; b <= binMax; b += binSize) bins.push(b);
+
+        // Collect unique sports and years for filter dropdowns
+        const sportsSet = new Set();
+        const yearsSet = new Set();
+        const yearCountsMap = {};
+        rawData.forEach(row => {
+            if (physCountries.includes(row.country)) {
+                if (row.sport) sportsSet.add(row.sport);
+                const y = Number(row.year);
+                if (y) {
+                    yearsSet.add(y);
+                    yearCountsMap[y] = (yearCountsMap[y] || 0) + 1;
+                }
+            }
+        });
+        const sportsList = [...sportsSet].sort();
+        const yearsList = [...yearsSet].sort((a, b) => a - b);
+        const yearCounts = yearCountsMap;
+
+        // { country: { bin: { athletes: Set, medals: number } } }
+        const physBins = {};
+        physCountries.forEach(c => {
+            physBins[c] = {};
+            bins.forEach(b => { physBins[c][b] = { athletes: new Set(), medals: 0 }; });
+        });
+
+        let physHeightSum = 0, physHeightCount = 0;
+        rawData.forEach(row => {
+            const h = Number(row.height);
+            if (!h || isNaN(h) || !physCountries.includes(row.country)) return;
+            // Apply sport filter if set
+            if (sportFilter && row.sport !== sportFilter) return;
+            // Apply year range filter if set
+            const y = Number(row.year);
+            if (yearRange && (y < yearRange[0] || y > yearRange[1])) return;
+            physHeightSum += h;
+            physHeightCount++;
+            const bin = Math.floor((h - binMin) / binSize) * binSize + binMin;
+            if (bin < binMin || bin > binMax) return;
+            const entry = physBins[row.country][bin];
+            if (!entry) return;
+            entry.athletes.add(row.athlete_id);
+            if (isTrue(row.won_medal)) entry.medals++;
+        });
+
+        const physColors = [
+            { bg: 'rgba(230, 159, 0, 0.5)', border: 'rgb(230, 159, 0)' },
+            { bg: 'rgba(86, 180, 233, 0.5)', border: 'rgb(86, 180, 233)' },
+            { bg: 'rgba(0, 158, 115, 0.5)', border: 'rgb(0, 158, 115)' },
+            { bg: 'rgba(204, 121, 167, 0.5)', border: 'rgb(204, 121, 167)' },
+        ];
+
+        const bubbleDatasets = physCountries.map((country, i) => ({
+            label: country,
+            data: bins
+                .map(b => {
+                    const e = physBins[country][b];
+                    const count = e.athletes.size;
+                    if (count === 0) return null;
+                    return { x: b + binSize / 2, y: count, r: Math.max(3, Math.sqrt(e.medals) * 4), _medals: e.medals };
+                })
+                .filter(Boolean),
+            backgroundColor: physColors[i].bg,
+            borderColor: physColors[i].border,
+            borderWidth: 1,
+        }));
+
+        const histogramDatasets = physCountries.map((country, i) => ({
+            label: country,
+            data: bins.map(b => physBins[country][b].athletes.size),
+            backgroundColor: physColors[i].bg,
+            borderColor: physColors[i].border,
+            borderWidth: 1,
+        }));
+
+        const physicalStats = {
+            bubbleDatasets,
+            histogramData: { labels: bins.map(b => b + binSize / 2), datasets: histogramDatasets },
+            avgHeight: physHeightCount > 0 ? physHeightSum / physHeightCount : 0,
+            sportsList,
+            yearsList,
+            yearCounts,
+        };
+
         // --- STORY 3: Win Rate Analysis (Radar Chart) ---
         const winRateSports = ['Fencing', 'Volleyball', 'Gymnastics'];
         const winRateCountries = ['Brazil', 'Japan', 'Italy', 'France'];
@@ -154,6 +245,7 @@ const useOlympicsData = () => {
         });
 
         return {
+            physicalStats,
             homeAdvantage: {
                 labels,
                 datasets: [
@@ -194,7 +286,7 @@ const useOlympicsData = () => {
                 datasets: radarDatasets
             }
         };
-    }, [rawData]);
+    }, [rawData, sportFilter, yearRange]);
 
     return { chartData, loading };
 }
