@@ -167,15 +167,17 @@ const useOlympicsData = (sportFilter = null, yearRange = null) => {
 
         const histogramDatasets = physCountries.map((country, i) => ({
             label: country,
-            data: bins.map(b => physBins[country][b].athletes.size),
+            data: bins.map(b => ({ x: b + binSize / 2, y: physBins[country][b].athletes.size })),
             backgroundColor: physColors[i].bg,
             borderColor: physColors[i].border,
             borderWidth: 1,
+            barPercentage: 1.0,
+            categoryPercentage: 1.0,
         }));
 
         const physicalStats = {
             bubbleDatasets,
-            histogramData: { labels: bins.map(b => b + binSize / 2), datasets: histogramDatasets },
+            histogramData: { datasets: histogramDatasets },
             avgHeight: physHeightCount > 0 ? physHeightSum / physHeightCount : 0,
             sportsList,
             yearsList,

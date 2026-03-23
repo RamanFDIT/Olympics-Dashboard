@@ -74,12 +74,12 @@ const Story1 = () => {
                 </button>
             </div>
 
-            <p className="text-gray-600 mb-4">
-                How height correlates with athlete count and medal performance across Brazil, Japan, Italy, and France.
+            <p className="text-gray-600 mb-4 w-3/4">
+                This story visualizes how height impacts athletic performance across different sports, highlighting where being tall or short provides an advantage and showcasing competitive outliers like the Japanese volleyball team.
             </p>
 
             {/* Filters row */}
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-bottom gap-4 mb-6">
                 {/* Sport dropdown */}
                 <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">Sport</label>

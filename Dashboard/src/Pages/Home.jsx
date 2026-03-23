@@ -1,12 +1,12 @@
+import { useNavigate } from "react-router-dom";
 import useOlympicsData from "../hooks/useOlympicsData";
 import DashboardMainGraph from "../Components/DashboardMainGraph";
 import Indicator from "../Components/Indicator";
 import HeightComparisonChart from "../Components/HeightComparisonChart";
-import WinRateRadarChart from "../Components/WinRateRadarChart";
 import WinRateLollipopChart from "../Components/WinRateLollipopChart";
-import FunFactsSection from "../Components/FunFactsSection";
 
-const Home = ({ onNavigate }) => {
+const Home = () => {
+    const navigate = useNavigate();
     const { chartData, loading } = useOlympicsData();
 
     if (loading) {
@@ -36,30 +36,25 @@ const Home = ({ onNavigate }) => {
                 {/* Main Graph */}
                 <div>
                     {chartData ? (
-                        <DashboardMainGraph chartData={chartData} onNavigate={() => onNavigate('story2')} />
+                        <DashboardMainGraph chartData={chartData} onNavigate={() => navigate('/story2')} />
                     ) : (
                         <div className="bg-white p-10 rounded-3xl text-center shadow-lg">
                             No data available for the main graph.
                         </div>
                     )}
                 </div>
-
-                {/* Fun Facts Section (Under Main Graph) */}
-                {/* <FunFactsSection /> */}
             </div>
-
-            {/* Side Widgets */}
             <div className="flex flex-col gap-5 w-1/3">
                 <div className="h-100">
                     <HeightComparisonChart 
                         data={chartData?.heightStats} 
-                        onNavigate={() => onNavigate('story1')} 
+                        onNavigate={() => navigate('/story1')} 
                     />
                 </div>
                 <div className="h-75">
                     <WinRateLollipopChart                                                                          
                         data={chartData?.winRateStats}                                                             
-                        onNavigate={() => onNavigate('story3')}                                                    
+                        onNavigate={() => navigate('/story3')}                                                    
                     />
                 </div>
             </div>
@@ -68,3 +63,4 @@ const Home = ({ onNavigate }) => {
 };
 
 export default Home;
+

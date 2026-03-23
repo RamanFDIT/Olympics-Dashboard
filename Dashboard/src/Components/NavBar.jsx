@@ -1,5 +1,6 @@
 import logo from '../assets/logo.svg';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
     LayoutDashboard, 
     BookOpen, 
@@ -11,7 +12,8 @@ import {
     ArrowDownToLine
 } from 'lucide-react';
 
-const NavBar = ({ isCompact, setIsCompact, onNavigate }) => {
+const NavBar = ({ isCompact, setIsCompact }) => {
+    const navigate = useNavigate();
     const [open, setOpen] = useState(false);
 
     const handleClick = () => {
@@ -29,7 +31,7 @@ const NavBar = ({ isCompact, setIsCompact, onNavigate }) => {
                         className="h-10 w-auto cursor-pointer" 
                         src={logo} 
                         alt="Logo" 
-                        onClick={() => onNavigate('home')}
+                        onClick={() => navigate('/')}
                     />
                 )}
                 <button 
@@ -45,7 +47,7 @@ const NavBar = ({ isCompact, setIsCompact, onNavigate }) => {
                 <div 
                     className={navItemClasses} 
                     title="Dashboard"
-                    onClick={() => onNavigate('home')}
+                    onClick={() => navigate('/')}
                 >
                     <div className="min-w-6 flex justify-center text-blue-600">
                         <LayoutDashboard size={22} />
@@ -71,16 +73,16 @@ const NavBar = ({ isCompact, setIsCompact, onNavigate }) => {
                     
                     {!isCompact && (
                         <div className={`flex flex-col gap-1 pl-10 mt-1 overflow-hidden transition-all duration-300 ease-in-out ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                            <a className="text-xs text-gray-500 hover:text-black py-2 pr-2 border-l-2 border-slate-300 pl-4 hover:border-black transition-all">
+                            <a className="text-xs text-gray-500 hover:text-black py-2 pr-2 border-l-2 border-slate-300 pl-4 hover:border-black transition-all cursor-pointer" onClick={() => navigate('/story1')}>
                                 Japan's Volleyball
                             </a>
                             <a 
                                 className="text-xs text-gray-500 hover:text-black py-2 pr-2 border-l-2 border-slate-300 pl-4 hover:border-black transition-all cursor-pointer"
-                                onClick={() => onNavigate('story2')}
+                                onClick={() => navigate('/story2')}
                             >
                                 Home Advantage Analysis
                             </a>
-                            <a className="text-xs text-gray-500 hover:text-black py-2 pr-2 border-l-2 border-slate-300 pl-4 hover:border-black transition-all">
+                            <a className="text-xs text-gray-500 hover:text-black py-2 pr-2 border-l-2 border-slate-300 pl-4 hover:border-black transition-all cursor-pointer" onClick={() => navigate('/story3')}>
                                 Win Rate Analysis
                             </a>
                         </div>

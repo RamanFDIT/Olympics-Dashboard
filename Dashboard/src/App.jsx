@@ -1,27 +1,30 @@
 import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import Home from "./Pages/Home";
 import Story1 from "./Pages/Story1";
 import Story2 from "./Pages/Story2";
+import Story3 from "./Pages/Story3";
 import NavBar from "./Components/NavBar";
 
 function App() {
   const [isCompact, setIsCompact] = useState(false);
-  const [currentPage, setCurrentPage] = useState('home');
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar - Pass setCurrentPage to allow navigation from Nav */}
+      {/* Sidebar */}
       <NavBar 
         isCompact={isCompact} 
         setIsCompact={setIsCompact} 
-        onNavigate={setCurrentPage}
       />
       
       {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 ${isCompact ? 'ml-20' : 'ml-50'} overflow-auto`}>
-        {currentPage === 'home' && <Home onNavigate={setCurrentPage} />}
-        {currentPage === 'story1' && <Story1 />}
-        {currentPage === 'story2' && <Story2 />}
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/story1" element={<Story1 />} />
+          <Route path="/story2" element={<Story2 />} />
+          <Route path="/story3" element={<Story3 />} />
+        </Routes>
       </div>
     </div>
   );

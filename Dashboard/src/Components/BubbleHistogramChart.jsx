@@ -67,25 +67,14 @@ const BubbleHistogramChart = ({ data, countryFilter }) => {
     },
   };
 
-  // --- Avg height line plugin for category x-scale (histogram) ---
+  // --- Avg height line plugin for linear x-scale (histogram) ---
   const avgLineHistPlugin = {
     id: 'avgLineHist',
     afterDraw(chart) {
       const xScale = chart.scales.x;
       const yScale = chart.scales.y;
       const ctx = chart.ctx;
-      const numLabels = chart.data.labels;
-
-      let xPixel;
-      for (let i = 0; i < numLabels.length - 1; i++) {
-        if (numLabels[i] <= avgHeight && numLabels[i + 1] > avgHeight) {
-          const ratio = (avgHeight - numLabels[i]) / (numLabels[i + 1] - numLabels[i]);
-          const px1 = xScale.getPixelForValue(i);
-          const px2 = xScale.getPixelForValue(i + 1);
-          xPixel = px1 + ratio * (px2 - px1);
-          break;
-        }
-      }
+      const xPixel = xScale.getPixelForValue(avgHeight);
       if (xPixel == null) return;
 
       ctx.save();
@@ -118,6 +107,7 @@ const BubbleHistogramChart = ({ data, countryFilter }) => {
   const bubbleOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: { padding: { left: 0, right: 10 } },
     plugins: {
       legend: {
         position: 'top',
@@ -150,7 +140,7 @@ const BubbleHistogramChart = ({ data, countryFilter }) => {
       x: {
         type: 'linear',
         min: 135,
-        max: 222,
+        max: 220.7,
         title: { display: false },
         ticks: { display: false },
         grid: { color: 'rgba(0,0,0,0.04)' },
@@ -159,6 +149,7 @@ const BubbleHistogramChart = ({ data, countryFilter }) => {
         title: { display: true, text: 'Number of Athletes', font: { size: 11 } },
         grid: { color: 'rgba(0,0,0,0.04)' },
         ticks: { font: { size: 10 } },
+        afterFit(scale) { scale.width = 60; },
       },
     },
   };
@@ -171,6 +162,7 @@ const BubbleHistogramChart = ({ data, countryFilter }) => {
   const histogramOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: { padding: { left: 0, right: 10 } },
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -181,22 +173,23 @@ const BubbleHistogramChart = ({ data, countryFilter }) => {
         borderWidth: 1,
         padding: 10,
         callbacks: {
-          title: (items) => items.length ? `Height: ${histogramData.labels[items[0].dataIndex]} cm` : '',
-          label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw} athletes`,
+          title: (items) => items.length ? `Height: ${items[0].parsed.x} cm` : '',
+          label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} athletes`,
         },
       },
     },
     scales: {
       x: {
+        type: 'linear',
+        min: 135,
+        max: 222,
+        offset: false,
         stacked: true,
         title: { display: true, text: 'Height (cm)', font: { size: 11 } },
         ticks: {
           font: { size: 9 },
           maxRotation: 0,
-          callback: function (val, index) {
-            const label = this.getLabelForValue(val);
-            return index % 3 === 0 ? label : '';
-          },
+          stepSize: 6,
         },
         grid: { display: false },
       },
@@ -205,6 +198,7 @@ const BubbleHistogramChart = ({ data, countryFilter }) => {
         title: { display: true, text: 'Number of Athletes', font: { size: 11 } },
         grid: { color: 'rgba(0,0,0,0.04)' },
         ticks: { font: { size: 10 } },
+        afterFit(scale) { scale.width = 60; },
       },
     },
   };
