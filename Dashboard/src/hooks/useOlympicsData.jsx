@@ -246,8 +246,40 @@ const useOlympicsData = (sportFilter = null, yearRange = null) => {
             };
         });
 
+        // --- STORY 3 DETAIL: Win Rates for ALL sports ---
+        const wrCountries = ['Brazil', 'Japan', 'Italy', 'France'];
+        const allWinStats = {}; // { country: { sport: { total: Set, winners: Set } } }
+        const allSportsSet = new Set();
+        wrCountries.forEach(c => { allWinStats[c] = {}; });
+
+        rawData.forEach(row => {
+            if (!wrCountries.includes(row.country) || !row.sport) return;
+            let sport = row.sport;
+            if (sport === "Artistic Gymnastics") sport = "Gymnastics";
+            allSportsSet.add(sport);
+            const cs = allWinStats[row.country];
+            if (!cs[sport]) cs[sport] = { total: new Set(), winners: new Set() };
+            cs[sport].total.add(row.athlete_id);
+            if (isTrue(row.won_medal)) cs[sport].winners.add(row.athlete_id);
+        });
+
+        const allSportsList = [...allSportsSet].sort();
+        const winRatesBySport = {}; // { country: { sport: rate } }
+        wrCountries.forEach(c => {
+            winRatesBySport[c] = {};
+            allSportsList.forEach(s => {
+                const st = allWinStats[c][s];
+                winRatesBySport[c][s] = st && st.total.size > 0
+                    ? (st.winners.size / st.total.size) * 100
+                    : 0;
+            });
+        });
+
+        const winRateAllSports = { allSports: allSportsList, rates: winRatesBySport };
+
         return {
             physicalStats,
+            winRateAllSports,
             homeAdvantage: {
                 labels,
                 datasets: [

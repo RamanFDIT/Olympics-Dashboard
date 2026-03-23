@@ -50,28 +50,7 @@ const Story2 = () => {
             {/* Header row */}
             <div className="flex items-center justify-between mb-2">
                 <h1 className="text-3xl font-bold">Home Field Advantage</h1>
-                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
-                    <span className={`text-sm font-medium transition-colors ${!isVisualized ? 'text-gray-800' : 'text-gray-400'}`}>
-                        Explore Data
-                    </span>
-                    <button
-                        onClick={isVisualized ? handleReset : handleVisualize}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                            isVisualized ? 'bg-blue-500' : 'bg-gray-300'
-                        }`}
-                        aria-label="Toggle story mode"
-                    >
-                        <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${
-                                isVisualized ? 'translate-x-6' : 'translate-x-1'
-                            }`}
-                        />
-                    </button>
-                    <span className={`text-sm font-medium flex items-center gap-1.5 transition-colors ${isVisualized ? 'text-blue-600' : 'text-gray-400'}`}>
-                        <Sparkles size={14} className={isVisualized ? 'text-blue-500' : 'text-gray-400'} />
-                        Story Mode
-                    </span>
-                </div>
+
             </div>
 
             <p className="text-gray-600 mb-4 w-3/4">

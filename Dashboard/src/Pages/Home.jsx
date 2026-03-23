@@ -20,7 +20,7 @@ const Home = () => {
     }
 
     return(
-        <main className="flex items-center gap-5 min-h-screen bg-gray-50 p-2 md:p-2">
+        <main className="flex items-center w-full justify-center gap-5 min-h-screen bg-gray-50 p-2 md:p-2">
             <div className="w-2/3 flex flex-col justify-start gap-15">
                 {/* Header and Indicators */}
                 <div className="flex justify-between w-full h-auto">

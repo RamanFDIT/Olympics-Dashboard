@@ -1,4 +1,6 @@
 import logo from '../assets/logo.svg';
+import datasetURL from '../assets/CleanedDataset.csv';
+import Papa from 'papaparse';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -20,6 +22,59 @@ const NavBar = ({ isCompact, setIsCompact }) => {
     const handleClick = () => {
         if (!isCompact) setOpen(!open);
     }
+
+    const handleExport = (type) => {
+        if (type === 'image') {
+            const canvases = document.querySelectorAll('canvas');
+            if (canvases.length === 0) return;
+
+            // Calculate total height and max width
+            let totalHeight = 0;
+            let maxWidth = 0;
+            const padding = 20;
+            canvases.forEach(c => {
+                totalHeight += c.height + padding;
+                if (c.width > maxWidth) maxWidth = c.width;
+            });
+
+            const merged = document.createElement('canvas');
+            merged.width = maxWidth;
+            merged.height = totalHeight;
+            const ctx = merged.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, merged.width, merged.height);
+
+            let yOffset = 0;
+            canvases.forEach(c => {
+                ctx.drawImage(c, 0, yOffset);
+                yOffset += c.height + padding;
+            });
+
+            const link = document.createElement('a');
+            link.download = 'chart_export.png';
+            link.href = merged.toDataURL('image/png');
+            link.click();
+        } else if (type === 'csv') {
+            const link = document.createElement('a');
+            link.href = datasetURL;
+            link.download = 'olympics_data.csv';
+            link.click();
+        } else if (type === 'json') {
+            Papa.parse(datasetURL, {
+                download: true,
+                header: true,
+                dynamicTyping: true,
+                complete: (results) => {
+                    const blob = new Blob([JSON.stringify(results.data, null, 2)], { type: 'application/json' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'olympics_data.json';
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                },
+            });
+        }
+    };
 
     const getNavItemClasses = (isActive) => 
         `flex items-center gap-4 px-4 py-3 rounded-xl transition-all cursor-pointer font-medium ${
@@ -99,7 +154,7 @@ const NavBar = ({ isCompact, setIsCompact }) => {
                                 }`}
                                 onClick={() => navigate('/story2')}
                             >
-                                Home Advantage Analysis
+                                Home Field Advantage
                             </a>
                             <a 
                                 className={`text-xs py-2 pr-2 border-l-2 pl-4 transition-all cursor-pointer ${
@@ -109,24 +164,17 @@ const NavBar = ({ isCompact, setIsCompact }) => {
                                 }`}
                                 onClick={() => navigate('/story3')}
                             >
-                                Win Rate Analysis
+                                Specialization & Win Rates
                             </a>
                         </div>
                     )}
-                </div>
-
-                <div className={getNavItemClasses(false)} title="Dataset">
-                    <div className="min-w-6 flex justify-center text-purple-600">
-                        <Database size={22} />
-                    </div>
-                    {!isCompact && <span className="whitespace-nowrap">Dataset</span>}
                 </div>
             </div>
 
             {/* Footer / Actions Section */}
             <div className="p-4 border-t border-slate-200">
                 {isCompact ? (
-                    <div className="flex justify-center cursor-pointer p-3 hover:bg-slate-200 rounded-xl text-gray-600" title="Export">
+                    <div className="flex justify-center cursor-pointer p-3 hover:bg-slate-200 rounded-xl text-gray-600" title="Download Image" onClick={() => handleExport('image')}>
                         <ArrowDownToLine size={22} />
                     </div>
                 ) : (
@@ -135,10 +183,15 @@ const NavBar = ({ isCompact, setIsCompact }) => {
                            <Download size={12} /> Export Data
                         </p>
                         <div className="relative group">
-                            <select className="w-full bg-white border border-slate-300 text-sm py-2 px-3 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all">
-                                <option>Download Image</option>
-                                <option>Export as CSV</option>
-                                <option>Export as JSON</option>
+                            <select
+                            value=""
+                            onChange={(e) => handleExport(e.target.value)}
+                            className="w-full bg-white border border-slate-300 text-sm py-2 px-3 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all"
+                        >
+                                <option value="" disabled>Select format...</option>
+                                <option value="image">Download Image</option>
+                                <option value="csv">Export as CSV</option>
+                                <option value="json">Export as JSON</option>
                             </select>
                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 group-hover:text-blue-500 transition-colors">
                                 <ChevronDown size={16} />

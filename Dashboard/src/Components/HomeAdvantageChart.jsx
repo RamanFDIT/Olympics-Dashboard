@@ -26,8 +26,9 @@ const HomeAdvantageChart = ({ data }) => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'bottom',
-        align: 'start',
+        display: true,
+        position: 'top',
+        align: 'end',
         labels: {
           boxWidth: 15,
           padding: 20,
