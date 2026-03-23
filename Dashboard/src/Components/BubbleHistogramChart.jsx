@@ -111,7 +111,7 @@ const BubbleHistogramChart = ({ data, countryFilter }) => {
     plugins: {
       legend: {
         position: 'top',
-        align: 'start',
+        align: 'end',
         labels: {
           boxWidth: 10,
           usePointStyle: true,
@@ -163,6 +163,10 @@ const BubbleHistogramChart = ({ data, countryFilter }) => {
     responsive: true,
     maintainAspectRatio: false,
     layout: { padding: { left: 0, right: 10 } },
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       legend: { display: false },
       tooltip: {

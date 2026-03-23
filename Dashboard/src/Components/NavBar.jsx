@@ -1,6 +1,6 @@
 import logo from '../assets/logo.svg';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
     LayoutDashboard, 
     BookOpen, 
@@ -14,13 +14,21 @@ import {
 
 const NavBar = ({ isCompact, setIsCompact }) => {
     const navigate = useNavigate();
-    const [open, setOpen] = useState(false);
+    const location = useLocation();
+    const [open, setOpen] = useState(location.pathname.startsWith('/story'));
 
     const handleClick = () => {
         if (!isCompact) setOpen(!open);
     }
 
-    const navItemClasses = `flex items-center gap-4 px-4 py-3 text-gray-700 hover:bg-slate-200 rounded-xl transition-all cursor-pointer font-medium ${isCompact ? 'justify-center px-0 mx-2' : ''}`;
+    const getNavItemClasses = (isActive) => 
+        `flex items-center gap-4 px-4 py-3 rounded-xl transition-all cursor-pointer font-medium ${
+            isCompact ? 'justify-center px-0 mx-2' : ''
+        } ${
+            isActive 
+                ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' 
+                : 'text-gray-700 hover:bg-slate-200'
+        }`;
 
     return (
         <nav className={`${isCompact ? 'w-20' : 'w-50'} h-screen bg-slate-100 flex flex-col fixed left-0 top-0 z-50 border-r border-slate-200 transition-all duration-300`}>
@@ -45,11 +53,11 @@ const NavBar = ({ isCompact, setIsCompact }) => {
             {/* Navigation Links */}
             <div className="flex-1 flex flex-col p-3 gap-2 overflow-y-auto overflow-x-hidden">
                 <div 
-                    className={navItemClasses} 
+                    className={getNavItemClasses(location.pathname === '/')} 
                     title="Dashboard"
                     onClick={() => navigate('/')}
                 >
-                    <div className="min-w-6 flex justify-center text-blue-600">
+                    <div className={`min-w-6 flex justify-center ${location.pathname === '/' ? 'text-blue-700' : 'text-blue-600'}`}>
                         <LayoutDashboard size={22} />
                     </div>
                     {!isCompact && <span className="whitespace-nowrap">Dashboard</span>}
@@ -57,8 +65,8 @@ const NavBar = ({ isCompact, setIsCompact }) => {
 
                 {/* Expandable Story Section */}
                 <div>
-                    <div className={navItemClasses} onClick={handleClick} title="Story">
-                        <div className="min-w-6 flex justify-center text-green-600">
+                    <div className={getNavItemClasses(location.pathname.startsWith('/story'))} onClick={handleClick} title="Story">
+                        <div className={`min-w-6 flex justify-center ${location.pathname.startsWith('/story') ? 'text-blue-700' : 'text-green-600'}`}>
                             <BookOpen size={22} />
                         </div>
                         {!isCompact && (
@@ -73,23 +81,41 @@ const NavBar = ({ isCompact, setIsCompact }) => {
                     
                     {!isCompact && (
                         <div className={`flex flex-col gap-1 pl-10 mt-1 overflow-hidden transition-all duration-300 ease-in-out ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                            <a className="text-xs text-gray-500 hover:text-black py-2 pr-2 border-l-2 border-slate-300 pl-4 hover:border-black transition-all cursor-pointer" onClick={() => navigate('/story1')}>
-                                Japan's Volleyball
+                            <a 
+                                className={`text-xs py-2 pr-2 border-l-2 pl-4 transition-all cursor-pointer ${
+                                    location.pathname === '/story1' 
+                                        ? 'text-blue-600 border-blue-500 font-bold' 
+                                        : 'text-gray-500 hover:text-black border-slate-300 hover:border-black font-medium'
+                                }`}
+                                onClick={() => navigate('/story1')}
+                            >
+                                Athlete Physical Attributes
                             </a>
                             <a 
-                                className="text-xs text-gray-500 hover:text-black py-2 pr-2 border-l-2 border-slate-300 pl-4 hover:border-black transition-all cursor-pointer"
+                                className={`text-xs py-2 pr-2 border-l-2 pl-4 transition-all cursor-pointer ${
+                                    location.pathname === '/story2' 
+                                        ? 'text-blue-600 border-blue-500 font-bold' 
+                                        : 'text-gray-500 hover:text-black border-slate-300 hover:border-black font-medium'
+                                }`}
                                 onClick={() => navigate('/story2')}
                             >
                                 Home Advantage Analysis
                             </a>
-                            <a className="text-xs text-gray-500 hover:text-black py-2 pr-2 border-l-2 border-slate-300 pl-4 hover:border-black transition-all cursor-pointer" onClick={() => navigate('/story3')}>
+                            <a 
+                                className={`text-xs py-2 pr-2 border-l-2 pl-4 transition-all cursor-pointer ${
+                                    location.pathname === '/story3' 
+                                        ? 'text-blue-600 border-blue-500 font-bold' 
+                                        : 'text-gray-500 hover:text-black border-slate-300 hover:border-black font-medium'
+                                }`}
+                                onClick={() => navigate('/story3')}
+                            >
                                 Win Rate Analysis
                             </a>
                         </div>
                     )}
                 </div>
 
-                <div className={navItemClasses} title="Dataset">
+                <div className={getNavItemClasses(false)} title="Dataset">
                     <div className="min-w-6 flex justify-center text-purple-600">
                         <Database size={22} />
                     </div>

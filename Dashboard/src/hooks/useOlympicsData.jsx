@@ -268,7 +268,7 @@ const useOlympicsData = (sportFilter = null, yearRange = null) => {
                 ]
             },
             heightStats: {
-                labels: [...heightCountries, 'Global Avg'],
+                labels: [...heightCountries, 'Olympics Avg'],
                 datasets: [{
                     label: 'Average Height (cm)',
                     data: [...countryAvgs, globalAvg],

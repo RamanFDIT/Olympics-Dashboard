@@ -1,7 +1,6 @@
 import { useState } from "react";
 import useOlympicsData from "../hooks/useOlympicsData";
 import BubbleHistogramChart from "../Components/BubbleHistogramChart";
-import { Sparkles } from "lucide-react";
 
 const decades = [
     { label: 'All Years', value: '' },
@@ -20,6 +19,7 @@ const decades = [
 
 const Story1 = () => {
     const [selectedSport, setSelectedSport] = useState(null);
+    const [selectedYear, setSelectedYear] = useState(null);
     const [showJapanOnly, setShowJapanOnly] = useState(false);
     const [yearRange, setYearRange] = useState(null);
     const { chartData, loading } = useOlympicsData(selectedSport, yearRange);
@@ -39,11 +39,15 @@ const Story1 = () => {
     const handleVisualize = () => {
         setShowJapanOnly(true);
         setSelectedSport('Volleyball');
+        setSelectedYear(2020);
+        setYearRange(null);
     };
 
     const handleReset = () => {
         setShowJapanOnly(false);
         setSelectedSport(null);
+        setSelectedYear(null);
+        setYearRange(null);
     };
 
     const handleDecadeChange = (e) => {
@@ -61,17 +65,6 @@ const Story1 = () => {
             {/* Header row */}
             <div className="flex items-center justify-between mb-2">
                 <h1 className="text-3xl font-bold">Athlete Physical Attributes</h1>
-                <button
-                    onClick={showJapanOnly ? handleReset : handleVisualize}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                        showJapanOnly
-                            ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
-                    }`}
-                >
-                    <Sparkles size={16} />
-                    {showJapanOnly ? 'Show All Countries' : 'Visualize the Story'}
-                </button>
             </div>
 
             <p className="text-gray-600 mb-4 w-3/4">
@@ -81,38 +74,63 @@ const Story1 = () => {
             {/* Filters row */}
             <div className="flex items-bottom gap-4 mb-6">
                 {/* Sport dropdown */}
-                <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Sport</label>
-                    <select
-                        value={selectedSport || ''}
-                        onChange={(e) => setSelectedSport(e.target.value || null)}
-                        className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
-                    >
-                        <option value="">All Sports</option>
-                        {sportsList.map(sport => (
-                            <option key={sport} value={sport}>{sport}</option>
-                        ))}
-                    </select>
-                </div>
+                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Sport</label>
+                        <select
+                            value={selectedSport || ''}
+                            onChange={(e) => setSelectedSport(e.target.value || null)}
+                            disabled={showJapanOnly}
+                            className={`px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all ${
+                                showJapanOnly ? 'opacity-60 cursor-not-allowed text-gray-500' : 'text-gray-700'
+                            }`}
+                        >
+                            <option value="">All Sports</option>
+                            {sportsList.map(sport => (
+                                <option key={sport} value={sport}>{sport}</option>
+                            ))}
+                        </select>
+                    </div>
 
-                {/* Decade dropdown */}
-                <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Time Period</label>
-                    <select
-                        value={yearRange ? `${yearRange[0]},${yearRange[1]}` : ''}
-                        onChange={handleDecadeChange}
-                        className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
+                    {/* Decade dropdown */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">Time Period</label>
+                        <select
+                            value={yearRange ? `${yearRange[0]},${yearRange[1]}` : ''}
+                            onChange={handleDecadeChange}
+                            className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
+                        >
+                            {decades.map(d => (
+                                <option key={d.value} value={d.value}>{d.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
+                    <span className={`text-sm font-medium transition-colors ${!showJapanOnly ? 'text-gray-800' : 'text-gray-400'}`}>
+                        Explore Data
+                    </span>
+                    <button
+                        onClick={showJapanOnly ? handleReset : handleVisualize}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                            showJapanOnly ? 'bg-blue-500' : 'bg-gray-300'
+                        }`}
+                        aria-label="Toggle story mode"
                     >
-                        {decades.map(d => (
-                            <option key={d.value} value={d.value}>{d.label}</option>
-                        ))}
-                    </select>
+                        <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                                showJapanOnly ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                        />
+                    </button>
+                    <span className={`text-sm font-medium flex items-center gap-1.5 transition-colors ${showJapanOnly ? 'text-blue-600' : 'text-gray-400'}`}>
+                        Explore Volleyball
+                    </span>
                 </div>
             </div>
 
             <BubbleHistogramChart
                 data={chartData?.physicalStats}
-                countryFilter={showJapanOnly ? ['Japan'] : null}
             />
         </div>
     );
