@@ -1,29 +1,45 @@
-import { useState } from "react";
-import { Line } from 'react-chartjs-2';
+import { useState, useRef, useEffect } from "react";
+import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
+  BarElement,
   Tooltip,
+  Legend,
 } from 'chart.js';
+import { ChevronDown } from 'lucide-react';
 import useOlympicsData from "../hooks/useOlympicsData";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 const COUNTRIES = ['Brazil', 'Japan', 'Italy', 'France'];
 const COLORS = [
-  { line: 'rgb(230, 159, 0)', text: '#e69f00' },      // Brazil - Orange
-  { line: 'rgb(86, 180, 233)', text: '#56b4e9' },      // Japan - Sky Blue
-  { line: 'rgb(0, 158, 115)', text: '#009e73' },        // Italy - Green
-  { line: 'rgb(204, 121, 167)', text: '#cc79a7' },      // France - Pink
+  { bg: 'rgba(230, 159, 0, 0.8)', border: 'rgb(230, 159, 0)' },
+  { bg: 'rgba(86, 180, 233, 0.8)', border: 'rgb(86, 180, 233)' },
+  { bg: 'rgba(0, 158, 115, 0.8)', border: 'rgb(0, 158, 115)' },
+  { bg: 'rgba(204, 121, 167, 0.8)', border: 'rgb(204, 121, 167)' },
 ];
 
+const DEFAULT_SPORTS = ['Fencing', 'Volleyball', 'Swimming', 'Gymnastics', 'Athletics'];
+const MAX_SPORTS = 5;
+
 const Story3 = () => {
-    const [sport1, setSport1] = useState('Fencing');
-    const [sport2, setSport2] = useState('Volleyball');
+    const [selectedSports, setSelectedSports] = useState(DEFAULT_SPORTS);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
     const { chartData, loading } = useOlympicsData();
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     if (loading) {
         return (
@@ -37,146 +53,140 @@ const Story3 = () => {
 
     const { allSports, rates } = chartData?.winRateAllSports || { allSports: [], rates: {} };
 
+    const toggleSport = (sport) => {
+        setSelectedSports(prev => {
+            if (prev.includes(sport)) {
+                return prev.filter(s => s !== sport);
+            }
+            if (prev.length >= MAX_SPORTS) return prev;
+            return [...prev, sport];
+        });
+    };
+
     // Build chart data
+    const chartLabels = selectedSports;
     const datasets = COUNTRIES.map((country, i) => ({
         label: country,
-        data: [rates[country]?.[sport1] || 0, rates[country]?.[sport2] || 0],
-        borderColor: COLORS[i].line,
-        backgroundColor: COLORS[i].line,
-        borderWidth: 3,
-        pointRadius: 8,
-        pointHoverRadius: 11,
-        pointBackgroundColor: COLORS[i].line,
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        tension: 0,
+        data: chartLabels.map(s => rates[country]?.[s] || 0),
+        backgroundColor: COLORS[i].bg,
+        borderColor: COLORS[i].border,
+        borderWidth: 0,
+        barPercentage: 0.4,
+        categoryPercentage: 0.8,
+        borderRadius: 4,
     }));
 
-    const chartData3 = {
-        labels: [sport1, sport2],
-        datasets,
+    const barData = { labels: chartLabels, datasets };
+
+    // External tooltip handler (same pattern as dashboard)
+    const getOrCreateTooltip = (chart) => {
+        let tooltipEl = chart.canvas.parentNode.querySelector('.custom-tooltip');
+        if (!tooltipEl) {
+            tooltipEl = document.createElement('div');
+            tooltipEl.className = 'custom-tooltip';
+            tooltipEl.style.cssText = `
+                position: absolute; pointer-events: none;
+                transition: all 0.5s ease;
+                background: rgba(255,255,255,0.95); border: 1px solid #e5e7eb;
+                border-radius: 8px; padding: 12px 16px; font-family: sans-serif;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08); z-index: 10;
+            `;
+            chart.canvas.parentNode.style.position = 'relative';
+            chart.canvas.parentNode.appendChild(tooltipEl);
+        }
+        return tooltipEl;
     };
 
-    // Auto max
-    const allVals = COUNTRIES.flatMap(c => [rates[c]?.[sport1] || 0, rates[c]?.[sport2] || 0]);
-    const maxVal = Math.max(...allVals, 10);
-    const yMax = Math.ceil(maxVal / 10) * 10 + 5;
+    const externalTooltipHandler = (context) => {
+        const { chart, tooltip } = context;
+        const tooltipEl = getOrCreateTooltip(chart);
 
-    // Resolve overlapping label positions by nudging apart
-    const resolveOverlaps = (items, minGap) => {
-        items.sort((a, b) => a.y - b.y);
-        for (let i = 1; i < items.length; i++) {
-            const overlap = (items[i - 1].y + minGap) - items[i].y;
-            if (overlap > 0) {
-                items[i - 1].y -= overlap / 2;
-                items[i].y += overlap / 2;
+        if (tooltip.opacity === 0) {
+            tooltipEl.style.opacity = '0';
+            return;
+        }
+
+        const yScale = chart.scales.y;
+        const cursorY = tooltip.caretY;
+        const labels = chart.data.labels;
+        let targetIndex = -1;
+        for (let i = 0; i < labels.length; i++) {
+            const yPos = yScale.getPixelForValue(i);
+            const bandHeight = yScale.height / labels.length;
+            if (Math.abs(cursorY - yPos) <= bandHeight / 2) {
+                targetIndex = i;
+                break;
             }
         }
-    };
 
-    // Plugin to draw country labels next to points
-    const labelPlugin = {
-        id: 'slopeLabels',
-        afterDraw(chart) {
-            const ctx = chart.ctx;
-            const meta0 = chart.getDatasetMeta(0);
-            if (!meta0.data || meta0.data.length < 2) return;
+        if (targetIndex === -1) {
+            tooltipEl.style.opacity = '0';
+            return;
+        }
 
-            const leftX = meta0.data[0].x;
-            const rightX = meta0.data[1].x;
-            const minGap = 18;
+        const sport = labels[targetIndex];
+        let html = `<div style="font-size:14px;font-weight:bold;color:#1f2937;margin-bottom:8px">${sport}</div>`;
+        chart.data.datasets.forEach((ds, dsIndex) => {
+            const meta = chart.getDatasetMeta(dsIndex);
+            if (meta.hidden) return;
+            const value = ds.data[targetIndex];
+            const color = ds.backgroundColor;
+            html += `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#4b5563;margin-bottom:3px">
+                <span style="width:12px;height:12px;border-radius:3px;background:${color};display:inline-block;flex-shrink:0"></span>
+                ${ds.label}: ${value.toFixed(1)}%
+            </div>`;
+        });
+        tooltipEl.innerHTML = html;
 
-            // Collect label positions for each side
-            const leftLabels = [];
-            const rightLabels = [];
-
-            chart.data.datasets.forEach((ds, dsIdx) => {
-                const meta = chart.getDatasetMeta(dsIdx);
-                if (meta.hidden) return;
-                leftLabels.push({ dsIdx, y: meta.data[0].y, val: ds.data[0] });
-                rightLabels.push({ dsIdx, y: meta.data[1].y, val: ds.data[1] });
-            });
-
-            resolveOverlaps(leftLabels, minGap);
-            resolveOverlaps(rightLabels, minGap);
-
-            ctx.save();
-            ctx.font = 'bold 13px sans-serif';
-
-            leftLabels.forEach(({ dsIdx, y, val }) => {
-                ctx.fillStyle = COLORS[dsIdx].text;
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${COUNTRIES[dsIdx]} ${val.toFixed(1)}%`, leftX - 16, y);
-            });
-
-            rightLabels.forEach(({ dsIdx, y, val }) => {
-                ctx.fillStyle = COLORS[dsIdx].text;
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${val.toFixed(1)}% ${COUNTRIES[dsIdx]}`, rightX + 16, y);
-            });
-
-            ctx.restore();
-        },
-    };
-
-    // Plugin to draw vertical lines at each sport
-    const vertLinePlugin = {
-        id: 'slopeVertLines',
-        beforeDraw(chart) {
-            const ctx = chart.ctx;
-            const xScale = chart.scales.x;
-            const yScale = chart.scales.y;
-            const meta0 = chart.getDatasetMeta(0);
-            if (!meta0.data || meta0.data.length < 2) return;
-
-            [meta0.data[0].x, meta0.data[1].x].forEach(xPx => {
-                ctx.save();
-                ctx.beginPath();
-                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-                ctx.lineWidth = 1;
-                ctx.moveTo(xPx, yScale.top);
-                ctx.lineTo(xPx, yScale.bottom);
-                ctx.stroke();
-                ctx.restore();
-            });
-        },
+        const tooltipWidth = tooltipEl.offsetWidth;
+        let left = tooltip.caretX + 16;
+        if (left + tooltipWidth > chart.width) {
+            left = tooltip.caretX - tooltipWidth - 16;
+        }
+        tooltipEl.style.opacity = '1';
+        tooltipEl.style.left = left + 'px';
+        tooltipEl.style.top = tooltip.caretY - tooltipEl.offsetHeight / 2 + 'px';
     };
 
     const options = {
+        indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        layout: {
-            padding: { left: 140, right: 140, top: 20, bottom: 10 },
+        interaction: {
+            mode: 'nearest',
+            intersect: false,
+            axis: 'y',
         },
         plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                titleColor: '#1f2937',
-                bodyColor: '#4b5563',
-                borderColor: '#e5e7eb',
-                borderWidth: 1,
-                padding: 10,
-                callbacks: {
-                    label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%`,
+            legend: {
+                position: 'top',
+                align: 'end',
+                labels: {
+                    boxWidth: 12,
+                    usePointStyle: true,
+                    font: { size: 12 },
+                    padding: 20,
                 },
+            },
+            tooltip: {
+                enabled: false,
+                external: externalTooltipHandler,
             },
         },
         scales: {
             x: {
-                grid: { display: false },
-                ticks: {
-                    color: '#374151',
-                    font: { size: 16, weight: 'bold' },
+                suggestedMax: 50,
+                grid: { color: 'rgba(0,0,0,0.05)' },
+                title: {
+                    display: true,
+                    text: 'Win Rate (%)',
+                    font: { size: 12 },
                 },
-                border: { display: false },
+                ticks: { font: { size: 11 } },
             },
             y: {
-                display: false,
-                min: 0,
-                max: yMax,
+                grid: { display: false },
+                ticks: { font: { size: 13, weight: 'bold' } },
             },
         },
     };
@@ -185,45 +195,63 @@ const Story3 = () => {
         <div className="p-10 bg-gray-50 min-h-screen">
             <h1 className="text-3xl font-bold mb-2">Country Specialization & Win Rates</h1>
             <p className="text-gray-600 mb-6 max-w-2xl">
-                See how each country's athlete-to-medal conversion shifts between two sports.
+                Compare athlete-to-medal conversion rates across sports for each country. Select up to 5 sports to compare.
             </p>
 
-            {/* Sport filters */}
-            <div className="flex items-center gap-4 mb-6">
-                <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Left Sport</label>
-                    <select
-                        value={sport1}
-                        onChange={(e) => setSport1(e.target.value)}
-                        className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
-                    >
-                        {allSports.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                </div>
-                <div className="pt-5 text-gray-400 text-lg">→</div>
-                <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Right Sport</label>
-                    <select
-                        value={sport2}
-                        onChange={(e) => setSport2(e.target.value)}
-                        className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
-                    >
-                        {allSports.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                </div>
+            {/* Sport selector dropdown */}
+            <div className="mb-6" ref={dropdownRef}>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Sports</label>
+                <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
+                >
+                    <span>{selectedSports.length} sport{selectedSports.length !== 1 ? 's' : ''} selected</span>
+                    <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {dropdownOpen && (
+                    <div className="absolute mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto w-64">
+                        {allSports.map(sport => {
+                            const isSelected = selectedSports.includes(sport);
+                            const isDisabled = !isSelected && selectedSports.length >= MAX_SPORTS;
+                            return (
+                                <label
+                                    key={sport}
+                                    className={`flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-gray-50 transition-colors ${
+                                        isDisabled ? 'opacity-40 cursor-not-allowed' : ''
+                                    }`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        disabled={isDisabled}
+                                        onChange={() => toggleSport(sport)}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-700">{sport}</span>
+                                </label>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
-            {/* Slope Chart */}
-            <div className="bg-white rounded-3xl shadow-xl p-8">
-                <p className="text-center text-black-400 text-sm mb-6">
-                    Conversion Rates from {sport1} to {sport2}
+            {/* Chart */}
+            <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+                <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-1">
+                    Efficiency Gaps
+                </h2>
+                <p className="text-xs text-gray-400 mb-6">
+                    Athlete-to-Medal Conversion Rate
                 </p>
-                <div style={{ height: '60vh' }}>
-                    <Line
-                        options={options}
-                        data={chartData3}
-                        plugins={[vertLinePlugin, labelPlugin]}
-                    />
+                <div style={{ height: '70vh' }}>
+                    {selectedSports.length > 0 ? (
+                        <Bar options={options} data={barData} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-400">
+                            Select at least one sport to display the chart.
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
